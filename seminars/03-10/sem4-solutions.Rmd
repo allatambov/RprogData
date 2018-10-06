@@ -1,0 +1,123 @@
+---
+title: "Семинар 4"
+author: "Алла Тамбовцева"
+output: html_document
+---
+
+### Часть 1
+
+1. Загрузите таблицу с расширением `Titanic.csv` по ссылке и сохраните ее как `df`. Посмотрите на нее. Сколько в таблице наблюдений (строк), переменных (столбцов)? Все ли переменные имеют корректный тип? Удалите из таблицы пропущенные значения и сохраните изменения в `df`.
+
+```{r}
+df <- read.csv("http://math-info.hse.ru/f/2018-19/comm-math/Titanic.csv")
+```
+
+```{r}
+str(df) # все корректно
+```
+
+```{r}
+df <- na.omit(df)
+```
+
+2. Используя функции `dplyr`, оставьте в базе данных все столбцы, кроме `Ticket` и `Cabin`.
+
+```{r,message=FALSE,comment=FALSE}
+library(dplyr)
+
+df <- df %>% dplyr::select(-c(Ticket, Cabin))
+```
+
+3. Переименуйте столбцы в таблице так, чтобы все названия были записаны с маленькой буквы (`dplyr` не требуется).
+
+```{r}
+colnames(df) <- tolower(colnames(df))
+colnames(df) # изменилось!
+```
+
+4. Добавьте в таблицу столбец `age_sq`, в котором сохранены значения возраста в квадрате. Добавьте столбец `female`, состоящий из 0 и 1, где 1 соответствует пассажирам женского пола (функция `ifelse()`).
+
+```{r}
+df <- df %>% mutate(age_sq = age ** 2, female = ifelse(sex == 'female', 1, 0))
+```
+
+5. Агрегируйте данные по классам (`pclass`) и посчитайте число пассажиров женского и мужского пола среди пассажиров каждого класса. Посчитайте процент пассажиров женского и мужского пола среди пассажиров каждого класса. (*Подсказка:* сочетайте  `group_by()` и `summarise()`).
+
+```{r}
+df %>% group_by(pclass) %>% summarise(n_female = sum(female), 
+                                      n_male = length(female) - sum(female))
+```
+
+```{r}
+
+```
+
+```{r}
+df %>% group_by(pclass) %>% summarise(n_female = sum(female) / length(female) * 100,
+                                      n_male = 100 - n_female)
+```
+
+6. Посчитайте число пассажиров, в обращении которых используется слово `Mr.`.
+
+```{r, eval=FALSE}
+install.packages("stringr")
+```
+
+```{r,message=FALSE,comment=FALSE}
+library(stringr)
+```
+
+```{r}
+sum(str_detect(df$name, "Mr."))
+```
+
+### Часть 2
+
+1. Установите библиотеку `ggplot2()` и обратитесь к ней через `library()`.
+
+```{r,eval=FALSE}
+install.packages("ggplot2")
+```
+
+```{r,message=FALSE,comment=FALSE}
+library(ggplot2)
+```
+
+2. Постройте гистограмму для значений переменной age для пассажиров 1) первого класса; 2) третьего класса.
+
+```{r}
+# пример для 1 класса
+
+df %>% filter(pclass == 1) %>% ggplot(aes(x = age)) + geom_histogram()
+```
+
+```{r}
+# binwidth - ширина столбца в гистограмме
+# ggtitle - заголовок графика
+
+df %>% filter(pclass == 1) %>% ggplot(aes(x = age)) + geom_histogram(binwidth = 5) + ggtitle("1st class")
+```
+
+```{r}
+# fill - цвет заливки графика
+# color - цвет границ графика
+# theme_bw - общая тема графика, здесь черно-белая
+
+df %>% filter(pclass == 1) %>% ggplot(aes(x = age)) + 
+  geom_histogram(binwidth = 5, fill = 'thistle', color = 'darkviolet') + 
+  ggtitle("1st class") +
+  theme_bw()
+```
+
+```{r}
+# 3 класс
+# наведите красоту графику самостоятельно :)
+df %>% filter(pclass == 3) %>% ggplot(aes(x = age)) + geom_histogram()
+```
+
+3. Постройте сглаженные графики плотности распределения переменной `age` (`geom_density()`) по группам в зависимости от пола пассажиров. Графики для пассажиров женского и мужского пола должны быть в разных «окошках» (фасетках).
+
+```{r}
+df %>% ggplot(aes(x = age)) + geom_density(fill = "hotpink") + facet_grid(~sex)
+```
+
